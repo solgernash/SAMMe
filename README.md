@@ -1,2 +1,2 @@
 # SAMMe
-SAMMe (pronounced Sammy) is a Three.js web application where end users upload full-body photos that are made into 3D models using SAM3D Body. Then users can use their own models to explore the environment.
+SAMMe (pronounced Sammy) is a Three.js web application where end users upload full-body photos that are made into 3D models using SAM3D Body. Then users can use their own models to explore the environment. This is a projected created for Dr. Yiheng Liang's Software Engineering 4050/6050. The student collaborators are Nash Carroll, Eric Liu, Chris Ambrose, Daniel Shaji, Shiv Pandey, and Asher Oortman.
