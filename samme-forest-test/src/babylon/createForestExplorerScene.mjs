@@ -74,6 +74,13 @@ export function createForestExplorerScene(engine, canvas, options = {}) {
   camera.lockedTarget = cameraTarget;
   scene.activeCamera = camera;
   camera.attachControl(canvas, true);
+
+  if (camera.inputs.attached.keyboard) {
+    camera.inputs.attached.keyboard.keysUp = [];
+    camera.inputs.attached.keyboard.keysDown = [];
+    camera.inputs.attached.keyboard.keysLeft = [];
+    camera.inputs.attached.keyboard.keysRight = [];
+  }
   camera.lowerRadiusLimit = 4.5;
   camera.upperRadiusLimit = 10.5;
   camera.lowerBetaLimit = 0.82;
@@ -116,10 +123,13 @@ export function createForestExplorerScene(engine, canvas, options = {}) {
   sky.material = skyMaterial;
 
   const terrainHeightAt = createTerrainSampler();
+  
   const ground = createTerrain(scene, worldSize, terrainHeightAt);
   ground.material = createGrassMaterial(scene);
   ground.receiveShadows = true;
   ground.isPickable = false;
+
+  createPath(scene, worldSize, terrainHeightAt);
 
   const treePalette = createTreePalette(scene);
   treePalette.forEach((tree) => {
@@ -203,8 +213,9 @@ export function createForestExplorerScene(engine, canvas, options = {}) {
       tmpForward.normalize();
     }
 
-    Vector3.CrossToRef(up, tmpForward, tmpRight);
+    Vector3.CrossToRef(tmpForward, up, tmpRight);
     tmpRight.normalize();
+    tmpRight.scaleInPlace(-1);
 
     tmpMove.set(0, 0, 0);
     if (moveState.forward) tmpMove.addInPlace(tmpForward);
@@ -265,7 +276,10 @@ function createTerrainSampler() {
     const fine = Math.sin(x * 0.085) * Math.cos(z * 0.078) * 0.35;
     const distance = Math.sqrt(x * x + z * z);
     const flatness = smoothstep(10, 35, distance);
-    return (low + mid + fine) * flatness;
+    const base = (low + mid + fine) * flatness;
+    const d = distanceFromPath(x, z);
+    const pathBlend = 1 - smoothstep(0, 7, d);
+    return base * (1 - pathBlend * 0.65);
   };
 }
 
@@ -488,6 +502,7 @@ function scatterForest({ scene, treePalette, treeCount, terrainHeightAt, worldSi
   const placed = [];
   const half = worldSize * 0.5 - 10;
   const spawnClearRadius = 18;
+  const pathHalfWidth = 5.5;
 
   for (let i = 0; i < treeCount; i += 1) {
     const archetype = treePalette[i % treePalette.length];
@@ -498,6 +513,8 @@ function scatterForest({ scene, treePalette, treeCount, terrainHeightAt, worldSi
       attempt += 1;
       const x = randomRange(-half, half);
       const z = randomRange(-half, half);
+      
+      if (distanceFromPath(x, z) < pathHalfWidth + Math.random() * 2.5) continue;
       const d = Math.hypot(x, z);
       if (d < spawnClearRadius + Math.random() * 14) continue;
 
@@ -647,3 +664,51 @@ function randomRange(min, max) {
   return min + Math.random() * (max - min);
 }
 
+function getPathCenterX(z) {
+  return Math.sin(z * 0.028) * 18 + Math.sin(z * 0.011) * 7;
+}
+
+function distanceFromPath(x, z) {
+  return Math.abs(x - getPathCenterX(z));
+}
+
+function createPath(scene, worldSize, terrainHeightAt) {
+  const pathMaterial = new StandardMaterial("pathMaterial", scene);
+  pathMaterial.diffuseColor = new Color3(0.48, 0.36, 0.22);
+  pathMaterial.specularColor = Color3.Black();
+
+  const half = worldSize * 0.5 - 6;
+  const halfWidth = 4.2;
+  const steps = 140;
+
+  const path = MeshBuilder.CreateGround("forestPath", {
+    width: halfWidth * 2,
+    height: worldSize - 12,
+    subdivisions: steps,
+    updatable: true,
+  }, scene);
+
+  const positions = path.getVerticesData(VertexBuffer.PositionKind);
+  const indices = path.getIndices();
+
+  for (let i = 0; i < positions.length; i += 3) {
+    const localX = positions[i];
+    const z = positions[i + 2];
+    const centerX = getPathCenterX(z);
+    const worldX = centerX + localX;
+
+    positions[i] = worldX;
+    positions[i + 1] = terrainHeightAt(worldX, z) + 0.03;
+    positions[i + 2] = z;
+  }
+
+  path.updateVerticesData(VertexBuffer.PositionKind, positions);
+
+  const normals = [];
+  VertexData.ComputeNormals(positions, indices, normals);
+  path.updateVerticesData(VertexBuffer.NormalKind, normals);
+
+  path.material = pathMaterial;
+  path.isPickable = false;
+  path.receiveShadows = true;
+}
