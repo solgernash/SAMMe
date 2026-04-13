@@ -4,6 +4,7 @@ import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { ShadowGenerator } from "@babylonjs/core/Lights/Shadows/shadowGenerator";
+import "@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
@@ -39,7 +40,7 @@ import { SkyMaterial } from "@babylonjs/materials/sky";
  */
 export function createForestExplorerScene(engine, canvas, options = {}) {
   const worldSize = options.worldSize ?? 280;
-  const treeCount = options.treeCount ?? 260;
+  const treeCount = options.treeCount ?? 420;
   const showDebugCapsule = options.showDebugCapsule ?? false;
 
   const scene = new Scene(engine);
@@ -71,6 +72,7 @@ export function createForestExplorerScene(engine, canvas, options = {}) {
     scene,
   );
   camera.lockedTarget = cameraTarget;
+  scene.activeCamera = camera;
   camera.attachControl(canvas, true);
   camera.lowerRadiusLimit = 4.5;
   camera.upperRadiusLimit = 10.5;
@@ -269,9 +271,9 @@ function createTerrainSampler() {
 
 function createTerrain(scene, worldSize, terrainHeightAt) {
   const ground = MeshBuilder.CreateGround(
-    "ground",
-    { width: worldSize, height: worldSize, subdivisions: 180 },
-    scene,
+      "ground",
+      { width: worldSize, height: worldSize, subdivisions: 180, updatable: true },
+      scene,
   );
 
   const positions = ground.getVerticesData(VertexBuffer.PositionKind);
@@ -374,6 +376,8 @@ function createTreePalette(scene) {
   );
   oakTrunk.position.y = 2.1;
   oakTrunk.material = trunkMatA;
+  oakTrunk.bakeCurrentTransformIntoVertices();
+  oakTrunk.position.set(0, 0, 0);
 
   const oakCanopyA = MeshBuilder.CreateSphere("oakCanopyA", { diameter: 2.9, segments: 6 }, scene);
   oakCanopyA.scaling.set(1.25, 1.0, 1.2);
@@ -388,6 +392,8 @@ function createTreePalette(scene) {
   const oakLeaves = Mesh.MergeMeshes([oakCanopyA, oakCanopyB, oakCanopyC], true, true);
   oakLeaves.name = "oakLeavesMaster";
   oakLeaves.material = leafMatA;
+  oakLeaves.bakeCurrentTransformIntoVertices();
+  oakLeaves.position.set(0, 0, 0);
 
   const pineTrunk = MeshBuilder.CreateCylinder(
     "pineTrunkMaster",
@@ -396,6 +402,8 @@ function createTreePalette(scene) {
   );
   pineTrunk.position.y = 2.7;
   pineTrunk.material = trunkMatB;
+  pineTrunk.bakeCurrentTransformIntoVertices();
+  pineTrunk.position.set(0, 0, 0);
 
   const pineConeA = MeshBuilder.CreateCylinder(
     "pineConeA",
@@ -421,6 +429,8 @@ function createTreePalette(scene) {
   const pineLeaves = Mesh.MergeMeshes([pineConeA, pineConeB, pineConeC], true, true);
   pineLeaves.name = "pineLeavesMaster";
   pineLeaves.material = leafMatB;
+  pineLeaves.bakeCurrentTransformIntoVertices();
+  pineLeaves.position.set(0, 0, 0);
 
   const roundTrunk = MeshBuilder.CreateCylinder(
     "roundTrunkMaster",
@@ -429,6 +439,8 @@ function createTreePalette(scene) {
   );
   roundTrunk.position.y = 1.85;
   roundTrunk.material = trunkMatA;
+  roundTrunk.bakeCurrentTransformIntoVertices();
+  roundTrunk.position.set(0, 0, 0);
 
   const roundCanopyA = MeshBuilder.CreateSphere("roundCanopyA", { diameter: 2.8, segments: 6 }, scene);
   roundCanopyA.position.set(0, 3.9, 0);
@@ -449,6 +461,8 @@ function createTreePalette(scene) {
   );
   roundLeaves.name = "roundLeavesMaster";
   roundLeaves.material = leafMatC;
+  roundLeaves.bakeCurrentTransformIntoVertices();
+  roundLeaves.position.set(0, 0, 0);
 
   const masters = [
     { trunkMaster: oakTrunk, leafMaster: oakLeaves, radius: 1.55, scaleMin: 0.9, scaleMax: 1.2 },
@@ -632,3 +646,4 @@ function smoothstep(edge0, edge1, x) {
 function randomRange(min, max) {
   return min + Math.random() * (max - min);
 }
+

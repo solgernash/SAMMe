@@ -2,16 +2,6 @@ import { createElement, useEffect, useRef } from "react";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { createForestExplorerScene } from "./createForestExplorerScene.mjs";
 
-/**
- * Minimal React wrapper for the forest explorer scene.
- *
- * Example:
- * <BabylonForestExplorer
- *   onSceneReady={(explorer) => {
- *     // Parent your loaded avatar root to explorer.avatarAnchor here.
- *   }}
- * />
- */
 export function BabylonForestExplorer({ onSceneReady, options }) {
   const canvasRef = useRef(null);
 
@@ -19,28 +9,39 @@ export function BabylonForestExplorer({ onSceneReady, options }) {
     const canvas = canvasRef.current;
     if (!canvas) return undefined;
 
-    const engine = new Engine(canvas, true, {
-      preserveDrawingBuffer: true,
-      stencil: true,
-      antialias: true,
-    });
+    let engine;
+    let explorer;
 
-    const explorer = createForestExplorerScene(engine, canvas, options);
-    if (onSceneReady) {
-      onSceneReady(explorer);
+    try {
+      engine = new Engine(canvas, true, {
+        preserveDrawingBuffer: true,
+        stencil: true,
+      });
+
+      explorer = createForestExplorerScene(engine, canvas, options);
+
+      console.log("explorer:", explorer);
+      console.log("scene:", explorer?.scene);
+      console.log("activeCamera:", explorer?.scene?.activeCamera);
+
+      if (onSceneReady) {
+        onSceneReady(explorer);
+      }
+
+      engine.runRenderLoop(() => {
+        explorer?.scene?.render();
+      });
+    } catch (err) {
+      console.error("Scene creation failed:", err);
     }
 
-    engine.runRenderLoop(() => {
-      explorer.scene.render();
-    });
-
-    const handleResize = () => engine.resize();
+    const handleResize = () => engine?.resize();
     window.addEventListener("resize", handleResize);
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      explorer.dispose();
-      engine.dispose();
+      explorer?.dispose?.();
+      engine?.dispose?.();
     };
   }, [onSceneReady, options]);
 
