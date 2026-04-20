@@ -1,0 +1,9 @@
+storage/uploads/*
+!storage/uploads/.gitkeep
+
+storage/avatars/*
+!storage/avatars/.gitkeep
+
+.venv/
+__pycache__/
+*.py[cod]
