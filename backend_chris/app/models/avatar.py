@@ -6,6 +6,7 @@ class AvatarRecord(BaseModel):
     status: str = "processing"
     imageUrl: str | None = None
     modelUrl: str | None = None
+    error: str | None = None
 
 
 class GenerateRequest(BaseModel):

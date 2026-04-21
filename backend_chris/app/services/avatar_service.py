@@ -9,6 +9,7 @@ from app.models.avatar import AvatarRecord
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 STORAGE_DIR = BASE_DIR / "storage"
 UPLOADS_DIR = STORAGE_DIR / "uploads"
+AVATARS_DIR = STORAGE_DIR / "avatars"
 
 
 def _safe_filename(filename: str | None) -> str:
@@ -36,6 +37,28 @@ async def save_upload(file: UploadFile) -> AvatarRecord:
 
 
 def mark_avatar_processing(avatar_id: str) -> AvatarRecord:
-    avatar = avatars[avatar_id].model_copy(update={"status": "processing", "modelUrl": None})
+    avatar = avatars[avatar_id].model_copy(
+        update={"status": "processing", "modelUrl": None, "error": None}
+    )
     avatars[avatar_id] = avatar
     return avatar
+
+
+def mark_avatar_ready(avatar_id: str, model_url: str) -> AvatarRecord:
+    avatar = avatars[avatar_id].model_copy(
+        update={"status": "ready", "modelUrl": model_url, "error": None}
+    )
+    avatars[avatar_id] = avatar
+    return avatar
+
+
+def mark_avatar_failed(avatar_id: str, error: str) -> AvatarRecord:
+    avatar = avatars[avatar_id].model_copy(
+        update={"status": "failed", "modelUrl": None, "error": error}
+    )
+    avatars[avatar_id] = avatar
+    return avatar
+
+
+def resolve_upload_path(image_url: str) -> Path:
+    return UPLOADS_DIR / Path(image_url).name
