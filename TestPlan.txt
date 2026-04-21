@@ -1,0 +1,218 @@
+Testing Document and Specification
+Test Plan
+Version 1.0
+Local SAM 3D Avatar System
+Project Name
+Local SAM 3D Avatar System
+Course
+CSCI 4050/6050 — 2026 Spring
+Team Members
+Nash Carrol, Asher Oortman, Eric Liu, Shiv Pandey, Daniel Shaji, Christopher Ambrose
+Document Version
+1.0
+Date
+April 2026
+
+Introduction
+This document outlines the test plan for the Local SAM 3D Avatar System, a full-stack web application developed as part of CSCI 4050/6050 by a six-member team. The system allows users to upload a personal photo which is processed by Meta's SAM 3D Body model running locally on a GPU-accelerated machine, generating an interactive 3D avatar rendered in a Three.js browser environment.
+The testing activities described in this document are designed to verify that the software meets the requirements specified in the Technical Architecture Plan. Testing will cover all major subsystems: the FastAPI backend, the SAM 3D Body AI estimator integration, MongoDB data persistence, static file serving, and the Three.js frontend viewer. The results of this testing process will enable the development team to gauge project success and identify defects for resolution.
+Terminology
+Throughout this document the following terms are used consistently:
+System — The complete platform including the FastAPI backend, MongoDB database, SAM 3D Body AI module, and Three.js frontend.
+User — Any individual who interacts with the frontend web interface to upload photos and view 3D avatars.
+Backend — The FastAPI Python server responsible for receiving requests, managing inference, and serving static files.
+AI Estimator — The SAM3DBodyEstimator class from Meta's SAM 3D Body repository, loaded into GPU VRAM on startup.
+Avatar — A .glb 3D model file generated from a user-uploaded photo by the AI Estimator and stored locally.
+Database — A local MongoDB Community Edition instance storing user records and avatar metadata.
+Viewer — The Three.js-based browser component that loads and renders a .glb avatar file from the local static server.
+GLB File — A binary 3D model file in GLTF format, produced by the Trimesh library and served over the local static route (e.g., http://localhost:8000/static/).
+Items Tested
+The following features will be tested during the testing phase as determined by the Technical Architecture Plan and project milestones:
+	•	Ability for a user to register and log in using local credentials (username/password) — Test Cases: 4.1.1.1, 4.1.1.2
+	•	Ability for a user to upload a photo via the browser frontend and submit it to the /generate endpoint — Test Cases: 4.2.1.1, 4.2.1.2
+	•	Ability of the FastAPI backend to receive a photo, save it to ./storage/uploads/, and invoke the AI Estimator — Test Case: 4.2.2.1
+	•	Ability of the SAM3DBodyEstimator to process an uploaded image and produce valid vertex/face/texture output — Test Case: 4.3.1.1
+	•	Ability of Trimesh to bundle AI output into a valid .glb file saved to ./storage/avatars/ — Test Case: 4.3.2.1
+	•	Ability of MongoDB to record avatar metadata (userId, status, local_image_path, local_model_path) correctly — Test Case: 4.4.1.1
+	•	Ability of the FastAPI static file server to expose .glb files at the expected localhost URL — Test Case: 4.5.1.1
+	•	Ability of the Three.js GLTFLoader in the frontend to fetch and render a .glb avatar from the local static URL — Test Case: 4.5.2.1
+	•	Ability of the frontend dashboard to display a user's uploaded photos and avatar statuses — Test Case: 4.6.1.1
+	•	Ability of the frontend to apply walk/idle animations to the rendered MHR skeleton in the .glb — Test Case: 4.6.2.1
+
+Items Not Tested
+The following features will not be included in the current testing procedure. This does not mean these features will not be implemented, but that they are not yet available or within scope for this iteration:
+	•	Cloud-based or remote GPU hosting of the SAM 3D Body model
+	•	Multi-GPU or distributed inference queue management
+	•	Administrative features such as user management, role assignment, or audit logging
+	•	Advanced Three.js interactions beyond walk/idle animations (e.g., physics, lip sync, facial expressions)
+	•	Mobile browser compatibility and responsive layout testing
+	•	Automated load or stress testing of the inference queue under concurrent users
+	•	OAuth or SSO-based authentication mechanisms
+
+Approach
+The overall testing methodology for this project is manual system testing conducted iteratively across development milestones. Each test case corresponds directly to a feature or requirement defined in the Technical Architecture Plan.
+Testing will be organized by subsystem: the AI Estimator module will be tested in isolation first (via a standalone Python script), followed by the FastAPI backend layer, database integration, static serving, and finally the full end-to-end pipeline through the frontend viewer. This layered approach ensures that lower-level failures are identified and resolved before higher-level integration tests are run.
+Security-adjacent tests — specifically user registration and login — will be tested with both valid and invalid credentials to verify that authentication functions correctly and unauthorized access is rejected.
+Each test case will produce documented results. Features that fail will generate an incident report submitted to the responsible team member via GitHub Issues. Regression testing will be performed at each subsequent milestone to ensure that previously passing features remain functional after new code is introduced.
+Item Pass/Fail Criteria
+An implemented feature passes the testing procedure if it performs the expected behavior consistently, produces no unhandled exceptions or crashes, and completes within a reasonable time threshold (e.g., avatar generation completes within 60 seconds on the target GPU hardware).
+A feature fails if it produces incorrect output, raises an unhandled error, causes a system crash, or performs so slowly that it is unusable. Failed features will be documented via incident reports and assigned for investigation and revision in the next development cycle.
+Test Deliverables
+In addition to this Test Plan, the following deliverables will be produced during the testing phase:
+Test Specification — A document outlining specific test cases, preconditions, test steps, and expected results for each testable feature.
+Test Reports — Incident reports, defect logs, severity assessments, and change requests submitted to developers via GitHub Issues.
+Regression Test Results — Documentation confirming that previously passing tests continue to pass after each development iteration.
+Testing Tasks
+The table below lists the testing deliverables and the activities required to produce each:
+
+Deliverable
+Activities
+Test Plan
+Analyze technical architecture for testable features; determine scope and approach; develop test schedule aligned with project milestones; identify features not yet available for testing.
+Test Specifications
+Analyze requirements; define detailed test cases per subsystem (AI module, API, database, frontend); specify preconditions, test steps, expected output, and pass/fail criteria for each case.
+Test Reports
+Execute all test cases per specification; document actual outcomes; log incidents and defects via GitHub Issues; classify severity; generate change requests for developers.
+Regression Results
+Re-run all prior test cases at each new milestone; confirm existing functionality is preserved; document any regressions introduced by new code changes.
+
+Test Cases
+4.1 — Authentication
+Test Case: 4.1.1.1 — User Registration with Valid Credentials
+Test Steps
+1. Navigate to the registration page.
+2. Enter a valid unique username and password.
+3. Submit the registration form.
+4. Confirm the API returns HTTP 201 and a new user document appears in MongoDB users collection.
+Expected Result
+A new user record is created in MongoDB with the provided username. The frontend redirects to the login page or dashboard.
+Pass/Fail Criteria
+Pass — System correctly creates user and stores credentials.
+
+Test Case: 4.1.1.2 — Login Attempt with Invalid Credentials
+Test Steps
+1. Navigate to the login page.
+2. Enter an incorrect username or password.
+3. Submit the login form.
+4. Observe the system response.
+Expected Result
+The system returns an authentication error (HTTP 401). No session is created. The user is not redirected to the dashboard.
+Pass/Fail Criteria
+Pass — Invalid credentials are rejected; no unauthorized access is granted.
+
+4.2 — Photo Upload & Backend Ingestion
+Test Case: 4.2.1.1 — Photo Upload via Frontend Uploader
+Test Steps
+1. Log in as a valid user.
+2. Select a JPEG or PNG photo using the frontend uploader component.
+3. Submit the photo to the /generate endpoint.
+4. Confirm the UI transitions to a 'processing' state.
+Expected Result
+The photo is accepted by the API. A loading or 'processing' indicator is shown. The photo is saved to ./storage/uploads/ on the server.
+Pass/Fail Criteria
+Pass — File is received and persisted; UI reflects processing state.
+
+Test Case: 4.2.1.2 — Rejection of Unsupported File Type
+Test Steps
+1. Log in as a valid user.
+2. Attempt to upload a non-image file (e.g., .pdf or .txt).
+3. Submit to the /generate endpoint.
+4. Observe the system response.
+Expected Result
+The API returns an appropriate error (HTTP 400 or 422). No file is saved to ./storage/uploads/. The frontend displays an error message.
+Pass/Fail Criteria
+Pass — Unsupported file types are rejected with an informative error.
+
+Test Case: 4.2.2.1 — Backend Saves Image and Invokes AI Estimator
+Test Steps
+1. Submit a valid image via the /generate endpoint.
+2. Inspect the ./storage/uploads/ directory to confirm the file is present.
+3. Monitor server logs to confirm SAM3DBodyEstimator.estimate() is invoked.
+4. Confirm the inference queue Lock serializes concurrent requests.
+Expected Result
+The image file appears in ./storage/uploads/. The estimator is called exactly once per request. Concurrent requests are queued rather than processed simultaneously.
+Pass/Fail Criteria
+Pass — Backend correctly persists the image and delegates to the AI module.
+
+4.3 — AI Estimation & GLB Export
+Test Case: 4.3.1.1 — SAM3DBodyEstimator Produces Valid 3D Output
+Test Steps
+1. Run the standalone estimator test script.
+2. Pass a test JPEG image to SAM3DBodyEstimator.
+3. Inspect the returned object for valid vertex, face, and texture data.
+4. Confirm no exceptions are raised and GPU memory is utilized.
+Expected Result
+The estimator returns a valid mesh data structure with non-empty vertex and face arrays. GPU VRAM usage increases during processing. No unhandled exceptions occur.
+Pass/Fail Criteria
+Pass — AI module produces valid mesh output from a photo input.
+
+Test Case: 4.3.2.1 — Trimesh Exports Valid .glb File
+Test Steps
+1. Provide valid SAM3DBodyEstimator output to the Trimesh export step.
+2. Confirm a .glb file is written to ./storage/avatars/.
+3. Open the .glb in a viewer (e.g., Babylon.js Sandbox) to confirm it renders a human-shaped mesh.
+Expected Result
+A .glb file is created in ./storage/avatars/. The file is non-empty and renders a valid human mesh. The MHR skeleton is present in the file structure.
+Pass/Fail Criteria
+Pass — .glb is exported successfully and contains a renderable mesh.
+
+4.4 — MongoDB Data Persistence
+Test Case: 4.4.1.1 — Avatar Metadata Correctly Stored in MongoDB
+Test Steps
+1. Complete a successful avatar generation request.
+2. Query the MongoDB avatars collection using the returned avatar ID.
+3. Verify all required fields are present and correct.
+Expected Result
+The avatars collection contains a document with valid _id (UUID), userId, status: 'ready', local_image_path pointing to the upload, and local_model_path pointing to the .glb file.
+Pass/Fail Criteria
+Pass — Metadata is fully and accurately persisted in the database.
+
+4.5 — Static File Serving
+Test Case: 4.5.1.1 — Static Server Exposes .glb at Expected URL
+Test Steps
+1. After avatar generation, note the local_model_path returned by the API.
+2. Construct the expected static URL (e.g., http://localhost:8000/static/avatar_1.glb).
+3. Open the URL in a browser or use curl.
+4. Confirm the file is served with MIME type model/gltf-binary.
+Expected Result
+The .glb file is accessible at the expected static URL. The server returns HTTP 200 with the correct content type. The file downloads completely without corruption.
+Pass/Fail Criteria
+Pass — Static file server correctly exposes generated avatars.
+
+4.6 — Frontend Viewer
+Test Case: 4.6.1.1 — Dashboard Displays User Photo Grid
+Test Steps
+1. Log in as a user who has at least one completed avatar.
+2. Navigate to the dashboard.
+3. Confirm photos are displayed in a grid layout.
+4. Confirm avatar status (processing/ready) is shown per item.
+Expected Result
+The dashboard renders a grid of the user's uploaded photos fetched from the local API. Each item shows the correct status label. No console errors related to data fetching are present.
+Pass/Fail Criteria
+Pass — Dashboard correctly displays user avatar gallery.
+
+Test Case: 4.6.2.1 — Three.js Viewer Loads and Animates .glb Avatar
+Test Steps
+1. From the dashboard, select a completed avatar.
+2. Confirm the Three.js viewer loads the .glb from the local static URL.
+3. Trigger the idle animation.
+4. Trigger the walk animation.
+5. Confirm both animations play on the MHR skeleton without visual artifacts.
+Expected Result
+The avatar model loads and displays in the Three.js viewer within 5 seconds. Both idle and walk animations play correctly on the rigged skeleton. No mesh clipping, T-pose freeze, or animation errors occur.
+Pass/Fail Criteria
+Pass — Frontend viewer correctly loads and animates the 3D avatar.
+
+End-to-End Integration
+Test Case: 4.7.1.1 — Full Pipeline: Upload → Estimate → Export → Display
+Test Steps
+1. Log in as a valid user.
+2. Upload a clear frontal photo.
+3. Wait for the API to complete processing.
+4. Confirm the avatar appears in the dashboard.
+5. Open the Three.js viewer and verify the avatar renders with animations.
+Expected Result
+The complete pipeline executes without manual intervention. The avatar is generated, saved, recorded in MongoDB, served statically, and rendered in Three.js. Total processing time is under 60 seconds on target hardware.
+Pass/Fail Criteria
+Pass — Full system pipeline executes correctly end-to-end.
+

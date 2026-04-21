@@ -1,0 +1,340 @@
+
+
+
+Software Project Management Plan:
+Project Plan
+
+Local SAM 3D Avatar System
+
+Team Members:
+Nash Carrol
+Asher Oortman
+Eric Liu
+Shiv Pandey
+Daniel Shaji
+Christopher Ambrose
+
+CSCI 4050/6050 — Spring 2026
+
+Table of Contents
+1  Introduction
+3
+    1.1  Project Overview
+3
+    1.2  Project Deliverables
+3
+    1.3  Definitions
+4
+2  Project Organization
+4
+    2.1  Organizational Structure
+4
+    2.2  Project Responsibilities
+5
+3  Managerial Process
+5
+    3.1  Management Objectives and Priorities
+5
+    3.2  Assumptions, Dependencies and Constraints
+6
+    3.3  Risk Management
+6
+    3.4  Configuration Management
+7
+    3.5  Monitoring and Controlling
+7
+    3.6  Staffing Plan
+7
+4  Technical Process
+7
+    4.1  Methods, Tools and Techniques
+7
+    4.2  Development Environment
+8
+5  WBS, Schedule, and Budget
+8
+    5.1  Work Breakdown Structure
+8
+    5.2  Dependencies
+9
+    5.3  Resource Requirements
+9
+    5.4  Schedule
+9
+    5.5  Budget and Resource Allocation
+10
+
+1  Introduction
+1.1  Project Overview
+The Local SAM 3D Avatar System is a locally hosted platform that generates 3D avatars from user-uploaded photos using Meta's SAM 3D Body model. The system runs entirely on a local Windows or Linux machine equipped with an NVIDIA GPU, eliminating any reliance on cloud compute. Users upload a photograph through a browser-based React/Three.js frontend; the backend processes the image with SAM 3D Body and returns a rigged, animated .glb file that is rendered interactively in the browser.
+
+This project defines success by the following criteria:
+	•	All core features are delivered: photo upload, 3D avatar generation, .glb viewer, and basic walk/idle animation.
+	•	The frontend is intuitive and usable to 95% of end users.
+	•	The backend inference pipeline processes a single image end-to-end without crashes or cold-start delays.
+	•	All team members develop working familiarity with FastAPI, Three.js, and the SAM 3D Body estimator.
+
+1.2  Project Deliverables
+Deliverable
+Target Date
+Progress Report #1
+February 2026
+Project Plan (this document)
+April 2026
+Milestone 1: SAM3D Env & Estimator Test
+March 13, 2026
+Milestone 2: FastAPI Backend + MongoDB
+March 22, 2026
+Milestone 3: React/Three.js Frontend Skeleton
+March 27, 2026
+First Iteration (Group Review)
+April 2026
+Testing Document
+April 2026
+Second Iteration (Group Review)
+Late April 2026
+User Guide and System Documentation
+Late April 2026
+Final Product Presentation
+May 2026
+
+1.3  Definitions
+Term
+Definition
+SAM 3D Body
+Meta's 3D human body estimation model; the core AI component of this project.
+GLB / .glb
+A binary container for 3D models (geometry, materials, skeleton, animations) using the glTF 2.0 standard.
+FastAPI
+A modern Python web framework used to build the REST backend.
+Three.js
+A JavaScript library for rendering 3D content in the browser via WebGL.
+MongoDB
+A document-oriented NoSQL database used for storing user and avatar metadata locally.
+VRAM
+Video RAM; GPU memory used to load and run the SAM 3D Body model.
+CUDA
+NVIDIA's parallel computing platform required to accelerate model inference.
+Trimesh
+A Python library used to post-process and export 3D mesh data as .glb files.
+Beanie ODM
+An asynchronous MongoDB object-document mapper used in the FastAPI backend.
+GLTFLoader
+A Three.js utility that loads and parses .glb files for in-browser rendering.
+
+2  Project Organization
+2.1  Organizational Structure
+The team consists of six members operating under a flat, democratic structure. There are no fixed hierarchical roles; ownership of tasks is voluntary and determined by consensus. All members are free to collaborate on any component. Primary communication is conducted over Discord, with GitHub Projects used for task tracking and milestone management. The shared codebase is maintained in a GitHub repository with Git version control.
+
+Member
+Primary Focus Area
+Nash Carrol
+Project coordination, backend architecture
+Asher Oortman
+AI module integration (SAM 3D Body)
+Eric Liu
+FastAPI backend & API endpoints
+Shiv Pandey
+MongoDB schema & data layer
+Daniel Shaji
+Documentation
+Christopher Ambrose
+React frontend & routing
+
+2.2  Project Responsibilities
+Because the team uses a flat democratic model, responsibilities are shared and fluid. The table below describes primary ownership areas, not exclusive assignments. Any team member may contribute to any area.
+
+Area
+Responsibilities
+AI / Model Integration
+Set up Conda environment with CUDA, PyTorch, Detectron2; validate SAM3DBodyEstimator; document model behavior and edge cases.
+Backend (FastAPI)
+Implement /generate endpoint, inference queue (Lock), static file serving for .glb assets, and JWT-based authentication.
+Data Layer (MongoDB)
+Define users and avatars collections; implement Beanie ODM models; abstract all direct DB interactions to the business logic layer.
+Frontend (React/Three.js)
+Build dashboard, photo uploader, GLTFLoader viewer, and walk/idle animations on the MHR skeleton.
+Testing & Documentation
+Create test plan, run integration tests, maintain system documentation and user guide.
+
+3  Managerial Process
+3.1  Management Objectives and Priorities
+The primary management objective is to deliver a working end-to-end demo: a user uploads a photo, a 3D avatar is generated locally, and it is rendered with basic animation in the browser. Given the steep technical learning curve—particularly around SAM 3D Body, Three.js animation, and local GPU inference—schedule management and knowledge sharing are the highest priorities.
+
+Tasks are tracked as GitHub Issues and organized into Milestones in GitHub Projects. The team holds async check-ins on Discord and synchronous meetings as needed. There is no designated project manager; coordination is a shared responsibility.
+
+3.2  Assumptions, Dependencies and Constraints
+	•	The team has access to the SAM 3D Body model checkpoint (~1.69 GB) hosted on Hugging Face, obtained on a per-request basis. The repository has already been cloned to a local machine.
+	•	A team member's local machine with a high-VRAM GPU (12 GB+) will serve as the development and inference server throughout the project.
+	•	Users are assumed to be accessing the system from a machine on the same local network as the inference server.
+	•	The SAM 3D Body repository API (sam3d_body_estimator.py) is treated as a read-only module; no modifications to the upstream model code are planned.
+	•	Loss of access to the primary GPU machine would severely impact the project timeline and may require cloud fallback.
+	•	The project has no financial budget; all resources are either open-source or already owned by team members.
+
+3.3  Risk Management
+Risk
+Response
+SAM 3D Body integration difficulty (high probability)
+Dedicate early milestone to isolated model testing; document all errors and workarounds; allow additional time buffer before backend integration begins.
+GPU machine unavailability
+Investigate HuggingFace Inference API or cloud GPU (e.g., Lambda Labs) as fallback; keep model-loading code behind an abstraction layer.
+Unfamiliarity with Three.js animation
+Assign a dedicated member to Three.js R&D in parallel with backend work; use community examples and starter templates.
+Scope creep (advanced avatar interactions)
+Lock core scope at photo-to-animated-avatar; defer any additional features to a clearly labeled stretch goal milestone.
+Team communication gaps
+Maintain a pinned Discord channel for daily async updates; use GitHub Issues as the single source of truth for task status.
+CUDA/environment setup inconsistencies across machines
+Use a shared Conda environment YAML file committed to the repository; document the exact CUDA/PyTorch version matrix.
+
+3.4  Configuration Management
+The baseline for this project is defined by this Project Plan document and the specifications in Plan.docx. All code changes are version-controlled via Git on the shared GitHub repository. Branching uses a feature-branch workflow; pull requests require at least one peer review before merging to main.
+
+Changes to core architecture (e.g., switching from MongoDB to another database, replacing the static .glb serving approach) must be discussed in Discord and reflected in a GitHub Issue before implementation. Changes that affect the model integration layer require consensus from the full team given the downstream impact.
+
+3.5  Monitoring and Controlling
+The project follows an iterative and incremental development lifecycle. GitHub Milestones define the iteration checkpoints. Progress is reviewed asynchronously via Discord and tracked in GitHub Projects. Each milestone concludes with a brief retrospective to adjust scope and priorities for the next increment.
+
+3.6  Staffing Plan
+The team consists of six members as listed in Section 2.1. No changes to team composition are anticipated. Work is allocated on a voluntary basis; any under-staffed area is surfaced in Discord for the team to re-balance.
+
+4  Technical Process
+4.1  Methods, Tools and Techniques
+The project uses an iterative development methodology. The team employs the following tools:
+	•	Version Control: Git / GitHub
+	•	Project Management: GitHub Projects (Issues, Milestones, Kanban board)
+	•	Communication: Discord
+	•	AI Model: Meta SAM 3D Body (sam3d_body_estimator.py, model.ckpt)
+	•	3D Post-processing: Trimesh (Python)
+	•	API Framework: FastAPI (Python)
+	•	ODM: Beanie (async MongoDB ODM for Python)
+	•	Frontend: React, Vanilla JS, Three.js (GLTFLoader, AnimationMixer)
+	•	Environment Management: Conda / Miniconda
+
+4.2  Development Environment
+Component
+Details
+Operating System
+Windows 10/11 with WSL2, or Ubuntu Linux
+GPU
+NVIDIA GPU with 12 GB+ VRAM (CUDA-enabled)
+CUDA Toolkit
+11.8 or 12.1 (matching PyTorch build)
+Python
+3.11 via Conda / Miniconda
+Key Python Packages
+PyTorch, Torchvision, Detectron2, Trimesh, OpenCV, FastAPI, Beanie, Uvicorn
+Database
+MongoDB Community Edition (local instance)
+Frontend Runtime
+Node.js + React; Three.js via npm
+Storage
+Local SSD — ./storage/uploads/ and ./storage/avatars/
+
+5  WBS, Schedule, and Budget
+5.1  Work Breakdown Structure
+Deliverable
+Activities
+Project Plan
+Review example SPMP; map project content to each section; write and finalize this document.
+Environment & Model Test (Milestone 1)
+Install CUDA, PyTorch, Detectron2 and SAM 3D dependencies in Conda env; run SAM3DBodyEstimator on a test photo; export and validate. glb output; document findings.
+FastAPI Backend (Milestone 2)
+Build /generate endpoint; implement GPU inference queue (Lock); connect static file server for. glb assets; integrate Beanie ODM; create users and avatars collections in MongoDB.
+Frontend Skeleton (Milestone 3)
+Scaffold React app; implement page routing; build login/signup UI and authentication flow; create HTTP client services; integrate basic Three.js canvas.
+First Iteration
+Connect frontend uploader to backend; render generated. glb in Three.js viewer; apply idle animation on MHR skeleton.
+Testing Document
+Define test plan; run integration and end-to-end tests; document results and bug fixes.
+Second Iteration
+Address first-iteration feedback; refine Three.js environment; add walk animation; improve error handling.
+User Guide & System Docs
+Document setup instructions, API endpoints, and frontend usage guide.
+Final Product
+Bug fixes, polish, and final presentation to class.
+
+5.2  Dependencies
+Due to overlapping timelines, several workstreams run in parallel. The key dependencies are:
+	•	The FastAPI backend cannot be fully integrated until Milestone 1 (SAM 3D Body environment and estimator test) is complete and stable.
+	•	The Three.js viewer depends on the backend being able to serve a valid .glb file via the static route.
+	•	The frontend skeleton (Milestone 3) can begin in parallel with Milestone 2, but end-to-end integration requires both to be complete.
+	•	The Testing Document depends on a functional first iteration.
+	•	The Second Iteration depends on client/reviewer feedback gathered during the First Iteration review.
+
+5.3  Resource Requirements
+The team requires six members with shared access to: a CUDA-capable GPU machine (owned by one team member), Node.js and Python development environments on personal laptops, the SAM 3D Body model checkpoint (already obtained from Hugging Face), and a shared GitHub repository. No external paid resources are required for the core scope.
+
+5.4  Schedule
+Task / Milestone
+Start
+Target Completion
+Project Plan
+February 2026
+April 20, 2026
+Milestone 1: Env Setup & Estimator Test
+February 2026
+March 13, 2026
+Milestone 2: FastAPI Backend + MongoDB
+March 13, 2026
+March 22, 2026
+Milestone 3: Frontend Skeleton (parallel)
+March 13, 2026
+March 27, 2026
+First Iteration (Group Review)
+March 27, 2026
+April 2026
+Testing Document
+April 2026
+April 2026
+Second Iteration (Group Review)
+April 2026
+Late April 2026
+User Guide & System Documentation
+April 2026
+Late April 2026
+Final Product Presentation
+Late April 2026
+May 2026
+
+5.5  Budget and Resource Allocation
+There is no financial cost associated with this project. All software dependencies are open-source or freely available. The GPU machine is owned by a team member and contributed at no charge. Time is the only budgeted resource.
+
+Estimated effort per member: approximately 60–80 hours over the semester (roughly 5 hours/week). Total estimated team effort: 360–480 hours.
+
+Category
+Estimated Hours (Team)
+Notes
+Environment Setup & Model Research
+60
+Highest uncertainty; buffer included
+Backend Development
+80
+FastAPI, MongoDB, inference queue
+Frontend Development
+90
+React, Three.js, GLTFLoader, animation
+Integration & Testing
+50
+End-to-end, bug fixes
+Documentation
+40
+Plan, user guide, system docs
+Planning & Communication (Overhead)
+60
+Discord, meetings, GitHub management
+TOTAL
+380
+~63 hrs/member average
+
+The three development iterations are scoped as follows:
+
+Iteration
+Scope
+First
+User can upload a photo via the browser; backend generates a .glb file; Three.js viewer loads and displays the static avatar.
+Second
+Idle and walk animations applied to the MHR skeleton; user authentication (login/signup); dashboard showing prior avatars.
+Final
+All features from prior iterations, polished UI, full error handling, and complete system documentation.
+
