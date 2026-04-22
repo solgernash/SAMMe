@@ -1,0 +1,78 @@
+{
+  "3": {
+    "inputs": {
+      "image": "unnamed (1).jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "4": {
+    "inputs": {
+      "images": [
+        "10",
+        2
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "Preview Image"
+    }
+  },
+  "10": {
+    "inputs": {
+      "bbox_threshold": 0.8,
+      "inference_type": "full",
+      "model": [
+        "15",
+        0
+      ],
+      "image": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "SAM3DBodyProcess",
+    "_meta": {
+      "title": "SAM 3D Body: Process Image"
+    }
+  },
+  "12": {
+    "inputs": {
+      "output_filename": "C:/Users/ericl/Documents/ComfyUI/output/sam3d_rigged.fbx",
+      "mesh_data": [
+        "10",
+        0
+      ]
+    },
+    "class_type": "SAM3DBodyExportFBX",
+    "_meta": {
+      "title": "SAM 3D Body: Export FBX"
+    }
+  },
+  "13": {
+    "inputs": {
+      "fbx_output_path": [
+        "12",
+        0
+      ],
+      "preview": ""
+    },
+    "class_type": "SAM3DBodyPreviewRiggedMesh",
+    "_meta": {
+      "title": "SAM 3D Body: Preview Rigged Mesh"
+    }
+  },
+  "15": {
+    "inputs": {
+      "model_path": "C:/Users/ericl/Documents/ComfyUI/models/sam3dbody",
+      "attn_backend": "auto",
+      "precision": "fp32"
+    },
+    "class_type": "LoadSAM3DBodyModel",
+    "_meta": {
+      "title": "Load SAM 3D Body Model"
+    }
+  }
+}
